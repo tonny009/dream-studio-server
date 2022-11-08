@@ -38,6 +38,15 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const Service = client.db('photography').collection('services')
+
+        app.post('/jwt', (req, res) => {
+            console.log('enterd')
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+            // console.log({ token })
+            res.send({ token })
+        })
+
         app.get('/services', async (req, res) => {
 
             const query = {}
