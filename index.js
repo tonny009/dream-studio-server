@@ -87,21 +87,32 @@ async function run() {
 
 
         //get all reviews in service details page--------
+        app.get('/reviewsAll', async (req, res) => {
+            let query = {}
+            if (req.query.serviceId) {
+                query = { serviceId: req.query.serviceId };
+            }
+            const cursor = Reviews.find(query);
+            const reviews = await cursor.toArray();
+            console.log(req.query.serviceId)
+            res.send(reviews);
+
+        })
         app.get('/reviews', verifyJWT, async (req, res) => {
             const decoded = req.decoded;
+            let query = {}
             console.log('inside review api:', decoded)
+            // if (req.query.serviceId) {
+            //     query = { serviceId: req.query.serviceId };
+            // }
 
             if (decoded.email !== req.query.email) {
                 return res.status(403).send({ message: 'unauthorized access' })
             }
-
-            let query = {}
             if (req.query.email) {
                 query = { email: req.query.email }
             }
-            if (req.query.serviceId) {
-                query = { serviceId: req.query.serviceId };
-            }
+
 
             const cursor = Reviews.find(query);
             const reviews = await cursor.toArray();
