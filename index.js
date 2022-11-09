@@ -92,7 +92,8 @@ async function run() {
             if (req.query.serviceId) {
                 query = { serviceId: req.query.serviceId };
             }
-            const cursor = Reviews.find(query);
+            const cursor = Reviews.find(query).sort({ "date": -1 });
+            console.log(cursor);
             const reviews = await cursor.toArray();
             console.log(req.query.serviceId)
             res.send(reviews);
