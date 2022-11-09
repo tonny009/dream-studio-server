@@ -38,6 +38,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const Service = client.db('photography').collection('services')
+        const Reviews = client.db('photography').collection('serviceReviews')
 
         app.post('/jwt', (req, res) => {
             console.log('enterd')
@@ -47,6 +48,14 @@ async function run() {
             res.send({ token })
         })
 
+        app.get('/serviceshome', async (req, res) => {
+
+            const query = {}
+            const cursor = Service.find(query);
+            const services = await cursor.limit(3).toArray();
+            res.send(services);
+        });
+
         app.get('/services', async (req, res) => {
 
             const query = {}
@@ -54,6 +63,50 @@ async function run() {
             const services = await cursor.toArray();
             res.send(services);
         });
+
+        app.post('/services', async (req, res) => {
+            const service = req.body;
+            const result = await Service.insertOne(service);
+            res.send(result);
+        });
+
+        app.get('/service-details/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const service = await Service.findOne(query);
+            res.send(service);
+        });
+
+        //insert your review from review form page
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            const result = await Reviews.insertOne(review);
+            res.send(result);
+        });
+
+
+
+        //get all reviews in service details page--------
+        app.get('/reviews', async (req, res) => {
+            let query = {}
+            if (req.query.email) {
+                query = { email: req.query.email }
+
+            }
+            if (req.query.serviceId) {
+                query = { serviceId: req.query.serviceId };
+            }
+
+            const cursor = Reviews.find(query);
+            const reviews = await cursor.toArray();
+            console.log(req.query.email);
+            // console.log(req.query.serviceId)
+            res.send(reviews);
+        })
+
+        //detele review--------
+
+
 
     }
     finally {
