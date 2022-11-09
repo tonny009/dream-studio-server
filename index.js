@@ -19,20 +19,21 @@ var uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@ac-1bjla5
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-// function verifyJWT(req, res, next) {
-//     const authHeader = req.headers.authorization;
-//     if (!authHeader) {
-//         return res.status(401).send({ message: 'unauthorized access' })
-//     }
-//     const token = authHeader.split(' ')[1];
-//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
-//         if (err) {
-//             return res.status(401).send({ message: 'unauthorized access' })
-//         }
-//         req.decoded = decoded
-//         next()
-//     })
-// }
+function verifyJWT(req, res, next) {
+    console.log("decode");
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'Unauthorized access' })
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Unauthorized access' })
+        }
+        req.decoded = decoded
+        next()
+    })
+}
 
 
 async function run() {
@@ -41,9 +42,8 @@ async function run() {
         const Reviews = client.db('photography').collection('serviceReviews')
 
         app.post('/jwt', (req, res) => {
-            console.log('enterd')
             const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1hr' })
             // console.log({ token })
             res.send({ token })
         })
@@ -87,11 +87,17 @@ async function run() {
 
 
         //get all reviews in service details page--------
-        app.get('/reviews', async (req, res) => {
+        app.get('/reviews', verifyJWT, async (req, res) => {
+            const decoded = req.decoded;
+            console.log('inside review api:', decoded)
+
+            if (decoded.email !== req.query.email) {
+                return res.status(403).send({ message: 'unauthorized access' })
+            }
+
             let query = {}
             if (req.query.email) {
                 query = { email: req.query.email }
-
             }
             if (req.query.serviceId) {
                 query = { serviceId: req.query.serviceId };
@@ -99,8 +105,7 @@ async function run() {
 
             const cursor = Reviews.find(query);
             const reviews = await cursor.toArray();
-            console.log(req.query.email);
-            // console.log(req.query.serviceId)
+            console.log(req.query.serviceId)
             res.send(reviews);
         })
 
