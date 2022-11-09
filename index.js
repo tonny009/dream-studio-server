@@ -112,7 +112,28 @@ async function run() {
             res.send(result)
 
         })
+        //update-----
 
+        app.get('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const review = await Reviews.findOne(query);
+            res.send(review);
+        })
+
+
+        app.patch('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedRvw = req.body.review
+            const query = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    review: updatedRvw
+                }
+            }
+            const result = await Reviews.updateOne(query, updatedDoc);
+            res.send(result);
+        })
     }
     finally {
 
